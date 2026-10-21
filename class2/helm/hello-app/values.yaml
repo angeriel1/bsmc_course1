@@ -1,0 +1,41 @@
+# https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Fx86-64%2Fstable%2Fbinary+download
+# https://helm.sh/docs/intro/install/
+# minikube start
+# helm list / install / upgrade
+# (from helm folder) helm install hello-app ./hello-app --values hello-app/values.yaml
+# minikube tunnel
+# minikube stop && minikube destroy
+
+namespace: hello-app
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/mbrandeburg/bsmc_course1
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 8001
+  targetPort: 5001
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+persistence:
+  enabled: false
+  mountPath: /app/static
+  size: 1Gi
+  accessMode: ReadWriteOnce
+  storageClassName: manual
+  # Creates a hostPath PersistentVolume on the minikube node.
+  # Set enabled: false (and storageClassName: standard) to use minikube's dynamic provisioner instead.
+  hostPath:
+    enabled: true
+    path: /data/hello-app

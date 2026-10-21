@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- if .Values.persistence.enabled }}
+  # ReadWriteOnce volume: stop the old pod before starting the new one
+  strategy:
+    type: Recreate
+  {{- end }}
+  selector:
+    matchLabels:
+      app: hello-app
+  template:
+    metadata:
+      labels:
+        app: hello-app
+    spec:
+      {{- if .Values.persistence.enabled }}
+      initContainers:
+        # A fresh PV is empty (unlike a Docker named volume), so seed it from the image once
+        - name: seed-static
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              if [ -z "$(ls -A /seed)" ]; then
+                echo "Empty volume, seeding from image"
+                cp -r {{ .Values.persistence.mountPath }}/. /seed/
+              else
+                echo "Volume already has content, leaving it alone"
+              fi
+          volumeMounts:
+            - name: site-content
+              mountPath: /seed
+      {{- end }}
+      containers:
+        - name: hello-app
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.service.targetPort }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: site-content
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: site-content
+          persistentVolumeClaim:
+            claimName: hello-app
+      {{- end }}

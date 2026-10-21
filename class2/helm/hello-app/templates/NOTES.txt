@@ -1,0 +1,5 @@
+hello-app is deployed in namespace {{ .Values.namespace }}.
+
+  minikube tunnel
+  kubectl get svc hello-app -n {{ .Values.namespace }}
+  Open http://<EXTERNAL-IP>:{{ .Values.service.port }} once the external IP is assigned.

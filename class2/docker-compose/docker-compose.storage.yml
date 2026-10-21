@@ -1,0 +1,17 @@
+#  docker exec -it class2-storage-web-1 bash     
+
+name: class2-storage
+
+services:
+  web:
+    image: ghcr.io/mbrandeburg/bsmc_course1:1.0.0
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: "5001"
+    restart: unless-stopped
+    volumes:
+      # blind mount: Maps your local directory directly into the container
+      #Docker seeds it from the image's /app/static on first use (create test object to demo not in build)
+      - ./static:/app/static
+

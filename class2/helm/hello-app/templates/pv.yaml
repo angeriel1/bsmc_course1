@@ -1,0 +1,18 @@
+{{- if and .Values.persistence.enabled .Values.persistence.hostPath.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hello-app-pv
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - {{ .Values.persistence.accessMode }}
+  # Retain: files on the node survive even if the PV object is deleted
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  hostPath:
+    # minikube persists /data across `minikube stop/start`
+    path: {{ .Values.persistence.hostPath.path }}
+    type: DirectoryOrCreate
+{{- end }}

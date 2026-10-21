@@ -1,0 +1,14 @@
+# docker-compose -f docker-compose.yml up   
+# show -d and ps
+# docker exec -it class2-basic-web-1 bash
+name: class2-basic
+
+services:
+  web:
+    image: ghcr.io/mbrandeburg/bsmc_course1:1.0.0
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: "5001"
+    restart: unless-stopped
+
